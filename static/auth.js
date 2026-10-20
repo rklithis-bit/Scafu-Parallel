@@ -8,9 +8,12 @@
   const password = document.querySelector("#password");
   const error = document.querySelector("#error");
   const submit = document.querySelector("#submit");
+  if (!form || !submit || !error) return;
   let mode = "signin";
+  let busy = false;
 
   function setMode(next) {
+    if (busy) return;
     mode = next;
     signinTab.classList.toggle("active", mode === "signin");
     signupTab.classList.toggle("active", mode === "signup");
@@ -21,28 +24,40 @@
     submit.innerHTML = (mode === "signin" ? "Sign in" : "Create account") + " <span>↗</span>";
     password.autocomplete = mode === "signin" ? "current-password" : "new-password";
     error.classList.add("hidden");
+    error.textContent = "";
   }
   signinTab.addEventListener("click", () => setMode("signin"));
   signupTab.addEventListener("click", () => setMode("signup"));
 
-  form.addEventListener("submit", async (event) => {
+  form.addEventListener("submit", async event => {
     event.preventDefault();
+    if (busy) return;
     error.classList.add("hidden");
+    error.textContent = "";
+    busy = true;
     submit.disabled = true;
     submit.textContent = mode === "signin" ? "Signing in…" : "Creating account…";
     try {
       const response = await fetch(`/api/auth/${mode}`, {
-        method: "POST", headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({email: email.value, password: password.value, username: username.value})
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Accept": "application/json"},
+        credentials: "same-origin",
+        cache: "no-store",
+        body: JSON.stringify({email: email.value.trim(), password: password.value, username: username.value.trim()})
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Could not sign in.");
-      location.href = result.redirect || "/chat";
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || `Sign-in request failed (HTTP ${response.status}).`);
+      if (!result.redirect) throw new Error("Login succeeded but the server did not return a destination. Please try again.");
+      window.location.assign(result.redirect);
     } catch (e) {
-      error.textContent = e.message || "Something went wrong.";
+      error.textContent = e instanceof TypeError
+        ? "Could not reach SCAFU. Check your connection and refresh the page."
+        : (e.message || "Something went wrong. Please try again.");
       error.classList.remove("hidden");
+    } finally {
+      busy = false;
       submit.disabled = false;
-      setMode(mode);
+      submit.innerHTML = (mode === "signin" ? "Sign in" : "Create account") + " <span>↗</span>";
     }
   });
 })();
