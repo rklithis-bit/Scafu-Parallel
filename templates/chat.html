@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <title>SCAFU — messages</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="chat-body">
+  <div class="app-frame">
+    <header class="topbar">
+      <a class="brand" href="/chat"><span class="brand-mark">s</span><span>SCAFU</span></a>
+      <div class="top-actions"><span class="online-dot"></span><span class="signed-in">{{ username }}</span>
+        <form action="{{ url_for('logout') }}" method="post"><button class="quiet" type="submit">Sign out</button></form>
+      </div>
+    </header>
+    <main class="chat-layout">
+      <aside class="sidebar">
+        <div class="side-heading"><div><div class="eyebrow">YOUR SPACE</div><h2>Messages</h2></div><span class="count" id="user-count">0</span></div>
+        <div id="user-list" class="user-list"><p class="muted small">Finding your people…</p></div>
+        <div class="sidebar-note"><span>♡</span><p>Some things are better shared between two.</p></div>
+      </aside>
+      <section class="conversation">
+        <div id="empty-state" class="empty-state"><div class="empty-orb">♡</div><h2>A little closer.</h2><p>Choose a person to start your private conversation.</p></div>
+        <div id="conversation-view" class="conversation-view hidden">
+          <header class="conversation-head"><div class="avatar" id="peer-avatar">♡</div><div><h2 id="peer-name">Messages</h2><p class="muted small">Your private conversation</p></div><span class="lock-label">⌑ Private</span></header>
+          <div id="messages" class="messages" aria-live="polite"></div>
+          <form id="message-form" class="composer" enctype="multipart/form-data">
+            <label class="attach" title="Attach image">＋<input id="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden></label>
+            <div class="composer-main"><div id="image-preview" class="image-preview hidden"></div><textarea id="message" name="message" rows="1" maxlength="4000" placeholder="Write something lovely…"></textarea></div>
+            <button class="send-button" type="submit" aria-label="Send message">↑</button>
+          </form>
+          <p class="composer-hint">Enter to send · Shift + Enter for a new line · Images up to 10 MB</p>
+        </div>
+      </section>
+    </main>
+    <footer class="app-footer">A quiet place for the things that matter <span>♡</span></footer>
+  </div>
+  <script src="{{ url_for('static', filename='chat.js') }}" defer></script>
+</body></html>

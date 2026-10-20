@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <title>SCAFU — just us</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <a class="brand" href="/" aria-label="SCAFU home"><span class="brand-mark">s</span><span>SCAFU</span></a>
+    <div class="auth-card">
+      <div class="eyebrow">A little space for two</div>
+      <h1 id="heading">Good to see you.</h1>
+      <p class="muted" id="subheading">Your private corner of the internet.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" id="signin-tab" type="button">Sign in</button>
+        <button class="tab" id="signup-tab" type="button">Create account</button>
+      </div>
+      <form id="auth-form">
+        <label id="username-wrap" class="field hidden">Username
+          <input id="username" autocomplete="username" minlength="3" maxlength="24" placeholder="e.g. lichu">
+        </label>
+        <label class="field">Email
+          <input id="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        </label>
+        <label class="field">Password
+          <input id="password" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+        </label>
+        <p id="error" class="notice hidden" role="alert"></p>
+        <button class="primary full" id="submit" type="submit">Sign in <span>↗</span></button>
+      </form>
+      <p class="fine-print">Private by design. Only share your login with people you trust.</p>
+    </div>
+    <footer>Made for your little world <span>♡</span></footer>
+  </main>
+  <script>window.SCAFU_CONFIG = { apiKey: {{ firebase_api_key|tojson }} };</script>
+  <script src="{{ url_for('static', filename='auth.js') }}" defer></script>
+</body></html>
