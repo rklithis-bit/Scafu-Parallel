@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("DATABASE_PATH", str(ROOT / "instance" / "scafu.db")))
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_FOLDER", str(ROOT / "static" / "uploads")))
 ALLOWED = {"png", "jpg", "jpeg", "gif", "webp"}
+PRIVATE_EMAILS = {"lichu@scafu.app", "ammu@scafu.app"}
 MAX_UPLOAD = 10 * 1024 * 1024
 
 app = Flask(__name__)
@@ -55,6 +56,10 @@ def init_db():
             created_at INTEGER NOT NULL,
             FOREIGN KEY(sender_uid) REFERENCES users(uid),
             FOREIGN KEY(recipient_uid) REFERENCES users(uid))""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS community_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, sender_uid TEXT NOT NULL,
+            sender_username TEXT NOT NULL, body TEXT, image_name TEXT,
+            created_at INTEGER NOT NULL)""")
 init_db()
 
 def api_login_required(fn):
@@ -130,6 +135,7 @@ def auth_action(action):
         session.clear()
         session["uid"] = uid
         session["username"] = username
+        session["email"] = email
         return jsonify(ok=True, redirect=url_for("chat_page"))
     except ValueError as exc:
         return jsonify(error=str(exc)), 400
@@ -143,25 +149,53 @@ def auth_action(action):
 def chat_page():
     if not session.get("uid"):
         return redirect(url_for("index"))
-    return render_template("chat.html", username=session["username"])
+    email = current_email()
+    return render_template("chat.html", username=session["username"],
+                           private_allowed=email in PRIVATE_EMAILS)
+
+def current_email():
+    email = str(session.get("email", "")).strip().lower()
+    if email:
+        return email
+    uid = session.get("uid")
+    if not uid:
+        return ""
+    with db() as conn:
+        row = conn.execute("SELECT email FROM users WHERE uid=?", (uid,)).fetchone()
+    email = str(row["email"] if row else "").strip().lower()
+    if email:
+        session["email"] = email
+    return email
+
+def private_allowed():
+    return current_email() in PRIVATE_EMAILS
+
+def private_forbidden():
+    return jsonify(error="Private chat is only available to the two authorized accounts."), 403
 
 @app.get("/api/users")
 @api_login_required
 def list_users():
+    if not private_allowed():
+        return private_forbidden()
     with db() as conn:
-        rows = conn.execute("SELECT username FROM users WHERE uid != ? ORDER BY username", (session["uid"],)).fetchall()
+        rows = conn.execute("""SELECT username FROM users
+            WHERE uid != ? AND lower(email) IN (?, ?) ORDER BY username""",
+            (session["uid"], *sorted(PRIVATE_EMAILS))).fetchall()
     return jsonify(users=[r["username"] for r in rows])
 
 @app.get("/api/messages")
 @api_login_required
 def get_messages():
+    if not private_allowed():
+        return private_forbidden()
     peer = request.args.get("with", "").strip()
     if not peer:
         return jsonify(messages=[])
     with db() as conn:
-        other = conn.execute("SELECT uid, username FROM users WHERE username=?", (peer,)).fetchone()
-        if not other:
-            return jsonify(error="User not found."), 404
+        other = conn.execute("SELECT uid, username, email FROM users WHERE username=?", (peer,)).fetchone()
+        if not other or other["email"].strip().lower() not in PRIVATE_EMAILS or other["uid"] == session["uid"]:
+            return jsonify(error="Private chat is only available between the two authorized accounts."), 403
         rows = conn.execute("""SELECT m.id, m.sender_uid, m.body, m.image_name, m.created_at, u.username AS sender
           FROM messages m JOIN users u ON u.uid=m.sender_uid
           WHERE (m.sender_uid=? AND m.recipient_uid=?) OR (m.sender_uid=? AND m.recipient_uid=?)
@@ -177,6 +211,8 @@ def get_messages():
 @app.post("/api/messages")
 @api_login_required
 def send_message():
+    if not private_allowed():
+        return private_forbidden()
     peer = request.form.get("to", "").strip()
     body = request.form.get("message", "").strip()
     image = request.files.get("image")
@@ -193,12 +229,49 @@ def send_message():
     if not body and not image_name:
         return jsonify(error="Write a message or choose an image."), 400
     with db() as conn:
-        other = conn.execute("SELECT uid FROM users WHERE username=?", (peer,)).fetchone()
-        if not other:
+        other = conn.execute("SELECT uid, email FROM users WHERE username=?", (peer,)).fetchone()
+        if not other or other["email"].strip().lower() not in PRIVATE_EMAILS or other["uid"] == session["uid"]:
             if image_name: (UPLOAD_DIR / image_name).unlink(missing_ok=True)
-            return jsonify(error="Choose a valid recipient."), 400
+            return jsonify(error="Private messages can only be sent to the other authorized account."), 403
         conn.execute("INSERT INTO messages(sender_uid,recipient_uid,body,image_name,created_at) VALUES(?,?,?,?,?)",
                      (session["uid"], other["uid"], body or None, image_name, int(time.time())))
+    return jsonify(ok=True)
+
+@app.get("/api/community/messages")
+@api_login_required
+def get_community_messages():
+    with db() as conn:
+        rows = conn.execute("""SELECT id, sender_uid, sender_username, body, image_name, created_at
+            FROM community_messages ORDER BY id DESC LIMIT 200""").fetchall()
+    items = []
+    for r in reversed(rows):
+        items.append({"id": r["id"], "sender": r["sender_username"],
+                      "mine": r["sender_uid"] == session["uid"], "body": r["body"],
+                      "image": url_for("uploaded_file", filename=r["image_name"]) if r["image_name"] else None,
+                      "time": time.strftime("%H:%M", time.localtime(r["created_at"]))})
+    return jsonify(messages=items)
+
+@app.post("/api/community/messages")
+@api_login_required
+def send_community_message():
+    body = request.form.get("message", "").strip()
+    image = request.files.get("image")
+    if len(body) > 4000:
+        return jsonify(error="Messages must be under 4,000 characters."), 400
+    image_name = None
+    if image and image.filename:
+        ext = image.filename.rsplit(".", 1)[-1].lower() if "." in image.filename else ""
+        if ext not in ALLOWED:
+            return jsonify(error="Use PNG, JPG, GIF or WEBP images."), 400
+        safe = secure_filename(image.filename) or "image"
+        image_name = f"{secrets.token_hex(16)}_{safe}"
+        image.save(UPLOAD_DIR / image_name)
+    if not body and not image_name:
+        return jsonify(error="Write a message or choose an image."), 400
+    with db() as conn:
+        conn.execute("""INSERT INTO community_messages(sender_uid, sender_username, body, image_name, created_at)
+            VALUES(?,?,?,?,?)""",
+            (session["uid"], session["username"], body or None, image_name, int(time.time())))
     return jsonify(ok=True)
 
 @app.get("/uploads/<path:filename>")
