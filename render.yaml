@@ -13,7 +13,7 @@ services:
       - key: FIREBASE_WEB_API_KEY
         sync: false
       - key: FIREBASE_PROJECT_ID
-        sync: false
+        value: scafu-59f30
       - key: FIREBASE_CLIENT_EMAIL
         sync: false
       - key: FIREBASE_PRIVATE_KEY
