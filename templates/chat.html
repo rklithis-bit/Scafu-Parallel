@@ -1,36 +1,179 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f4f7f2">
-  <title>SCAFU — messages</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCAFU — Parallel</title>
+<style>
+:root{--cream:#fcf8ee;--panel:#f5f5f5;--ink:#292929;--gold:#b18b55;--shadow:8px 8px 22px #0002,-7px -7px 20px #fff9;--soft:inset 3px 3px 8px #0002,inset -3px -3px 8px #fff}
+*{box-sizing:border-box}
+body{margin:0;background:#191919;color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+.page{display:none;min-height:100vh;padding:34px;align-items:center;justify-content:center}
+.page.active{display:flex}
+.auth-shell{width:min(100%,1440px);min-height:min(88vh,900px);background:var(--cream);border-radius:38px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:44px 22px}
+.brand{display:flex;align-items:center;gap:15px;color:#050505;font-size:clamp(30px,3vw,46px);margin-bottom:26px}
+.brand-mark{width:58px;height:64px;flex:none}
+.auth-card{width:min(100%,485px);min-height:420px;background:var(--panel);border-radius:30px;padding:24px 32px 32px;box-shadow:var(--shadow)}
+.kicker{font-size:clamp(17px,1.8vw,24px);letter-spacing:4px;margin:0 0 2px;color:#4a4a4a}
+.parallel{font-size:clamp(36px,4vw,50px);letter-spacing:10px;margin:0 0 2px;font-weight:600}
+.tagline{font-size:19px;margin:0 0 60px}
+.auth-card.signup .tagline{margin-bottom:36px}
+.field{display:block;width:100%;height:67px;border:0;border-radius:21px;background:white;padding:0 24px;margin:0 0 38px;box-shadow:var(--shadow);outline:none;font-size:17px;color:#333}
+.field::placeholder{color:#c6a982;letter-spacing:5px;font-style:italic}
+.auth-links{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;color:var(--gold);font-size:18px;margin-top:46px}
+.auth-card.signup .auth-links{margin-top:-8px}
+.text-button{border:0;background:transparent;color:var(--gold);padding:3px}
+.text-button:hover{text-decoration:underline}
+.slogan{font-size:19px;letter-spacing:7px;font-style:italic;color:#7b6445;margin-top:18px;text-align:center}
+.error{min-height:18px;color:#a33;font:14px Arial,sans-serif;margin-top:12px}
+.chat-shell{width:min(100%,1120px);height:min(86vh,780px);min-height:520px;background:#f7f7f7;border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.chat-header{height:82px;flex:none;display:grid;grid-template-columns:180px 1fr 32%;align-items:stretch;background:var(--cream);border-bottom:1px solid #d8cdb9}
+.chat-brand{display:flex;align-items:center;gap:10px;padding:12px 18px;font-size:25px;color:#000;white-space:nowrap}
+.chat-brand .brand-mark{width:42px;height:46px}
+.chat-title{display:flex;align-items:center;justify-content:center;font-size:clamp(22px,3.1vw,42px);white-space:nowrap;border-right:1px solid #d6b77e}
+.fox{display:flex;align-items:center;justify-content:center;background:#a7e0ff;font-size:clamp(20px,2.7vw,36px);white-space:nowrap}
+.fox .f{color:#f39a00}.fox .amp{color:#e35f9c}.fox .p{color:#111}
+.messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+.message{max-width:min(75%,650px);align-self:flex-start;background:#fff;border-radius:18px;padding:12px 16px;box-shadow:3px 3px 10px #0001;overflow-wrap:anywhere;position:relative}
+.message.mine{align-self:flex-end;background:#f4ead6}
+.message.special{border:1px solid #d6ac4c;background:linear-gradient(135deg,#fff9e7,#fff);box-shadow:0 0 12px #d6ac4c44}
+.message .sender{font-size:13px;color:#8e6d37;margin-bottom:5px}
+.message .time{font:11px Arial,sans-serif;color:#888;text-align:right;margin-top:7px}
+.message .delete{border:0;background:transparent;color:#888;font-size:12px;float:right;margin-left:12px}
+.composer{display:flex;align-items:center;gap:8px;padding:10px 20px 14px;background:#f7f7f7}
+.attach{width:56px;height:56px;flex:none;border:0;border-radius:50%;background:#f5f5f5;box-shadow:var(--shadow);font-size:34px;color:#444;line-height:1}
+.composer input{height:56px;min-width:0;flex:1;border:0;border-radius:24px;background:#f5f5f5;box-shadow:var(--soft);padding:0 22px;outline:none}
+.send{height:48px;border:0;border-radius:20px;background:#b18b55;color:white;padding:0 18px}
+.special-note{display:none;color:#9c792f;font-size:12px;text-align:center;padding:4px}
+.special-note.show{display:block}
+@media(max-width:650px){
+ .page{padding:12px}.auth-shell{min-height:94vh;border-radius:26px;padding:28px 14px}.auth-card{padding:23px 22px;min-height:390px}.field{height:58px;margin-bottom:25px}.tagline{margin-bottom:42px}.slogan{font-size:13px;letter-spacing:4px}
+ .chat-shell{height:94vh;min-height:0;border-radius:20px}.chat-header{height:66px;grid-template-columns:90px 1fr 29%}.chat-brand{font-size:16px;padding:6px;gap:5px}.chat-brand .brand-mark{width:30px;height:34px}.chat-title{font-size:clamp(13px,3.3vw,21px);white-space:normal;text-align:center;padding:3px}.fox{font-size:clamp(12px,3vw,20px);white-space:normal;text-align:center}.messages{padding:14px}.message{max-width:88%}.composer{padding:8px 10px 12px}.attach{width:46px;height:46px}.composer input{height:48px}.send{padding:0 12px}
+}
+</style>
 </head>
-<body class="chat-body">
-  <main class="chat-shell" id="scafu-app" data-private-allowed="{{ 'true' if private_allowed else 'false' }}" data-username="{{ username }}">
-    <header class="topbar">
-      <a class="brand" href="/chat"><span class="brand-mark">s</span><span>SCAFU</span></a>
-      <div class="top-actions"><span class="signed-in">{{ username }}</span>
-        <form action="{{ url_for('logout') }}" method="post"><button class="quiet" type="submit">Sign out</button></form>
-      </div>
-    </header>
-    <nav class="room-tabs" aria-label="Chat rooms">
-      <button type="button" class="room-tab active" data-room="community">Community</button>
-      {% if private_allowed %}<button type="button" class="room-tab" data-room="private">Private chat</button>{% endif %}
-    </nav>
-    <section class="conversation">
-      <header class="conversation-head"><div class="avatar" id="room-avatar">C</div><div><h1 id="room-title">Community</h1><p id="room-subtitle" class="muted small">Everyone signed in can join</p></div><span class="lock-label" id="room-label">GROUP</span></header>
-      <div id="messages" class="messages" aria-live="polite"></div>
-      <div id="empty-note" class="empty-note hidden"></div>
-      <p id="chat-error" class="notice chat-error hidden" role="status"></p>
-      <form id="message-form" class="composer" enctype="multipart/form-data">
-        <label class="attach" title="Attach image">＋<input id="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden></label>
-        <div class="composer-main"><div id="image-preview" class="image-preview hidden"></div><textarea id="message" name="message" rows="1" maxlength="4000" placeholder="Message the community…" aria-label="Message"></textarea></div>
-        <button class="send-button" type="submit" aria-label="Send message">↑</button>
-      </form>
-      <p class="composer-hint">Enter to send · Shift + Enter for a new line · Images up to 10 MB</p>
-    </section>
-    <footer class="app-footer">SCAFU <span>·</span> a little closer, together</footer>
-  </main>
-  <script src="{{ url_for('static', filename='chat.js') }}" defer></script>
-</body></html>
+<body>
+<!-- Replace /static/scafu-logo.svg with your real logo path if available. -->
+<section id="loginPage" class="page active">
+ <div class="auth-shell">
+  <div class="brand"><svg class="brand-mark" viewBox="0 0 64 70" aria-label="SCAFU logo"><polygon points="32,2 61,19 61,51 32,68 3,51 3,19" fill="#050505"/><circle cx="32" cy="35" r="27" fill="#ff1018"/><polygon points="32,8 57,49 7,49" fill="#fff"/></svg><span>SCAFU</span></div>
+  <form class="auth-card" id="loginForm">
+   <p class="kicker">Lead the Innovation.</p><h1 class="parallel">Parallel</h1><p class="tagline">The parallel way of communication.</p>
+   <input class="field" id="loginId" autocomplete="username" placeholder="Scafu ID" required>
+   <input class="field" id="loginPassword" type="password" autocomplete="current-password" placeholder="Password" required>
+   <div class="auth-links"><button type="button" class="text-button" id="forgotButton">forgot password</button><span>•</span><button type="button" class="text-button" data-show="signupPage">Signup</button></div>
+   <div class="error" id="loginError" role="status"></div>
+  </form>
+  <div class="slogan">We do things that matter //</div>
+ </div>
+</section>
+<section id="signupPage" class="page">
+ <div class="auth-shell">
+  <div class="brand"><svg class="brand-mark" viewBox="0 0 64 70" aria-label="SCAFU logo"><polygon points="32,2 61,19 61,51 32,68 3,51 3,19" fill="#050505"/><circle cx="32" cy="35" r="27" fill="#ff1018"/><polygon points="32,8 57,49 7,49" fill="#fff"/></svg><span>SCAFU</span></div>
+  <form class="auth-card signup" id="signupForm">
+   <p class="kicker">Lead the Innovation.</p><h1 class="parallel">Parallel</h1><p class="tagline">The parallel way of communication.</p>
+   <input class="field" id="signupUsername" autocomplete="nickname" placeholder="Username" required>
+   <input class="field" id="signupId" autocomplete="email" placeholder="Scafu ID" required>
+   <input class="field" id="signupPassword" type="password" autocomplete="new-password" placeholder="Password" required>
+   <div class="auth-links"><button type="button" class="text-button" id="signupForgot">forgot password</button><span>•</span><button type="button" class="text-button" data-show="loginPage">Signin</button></div>
+   <div class="error" id="signupError" role="status"></div>
+  </form>
+  <div class="slogan">We do things that matter //</div>
+ </div>
+</section>
+<section id="chatPage" class="page">
+ <div class="chat-shell">
+  <header class="chat-header">
+   <div class="chat-brand"><svg class="brand-mark" viewBox="0 0 64 70" aria-label="SCAFU logo"><polygon points="32,2 61,19 61,51 32,68 3,51 3,19" fill="#050505"/><circle cx="32" cy="35" r="27" fill="#ff1018"/><polygon points="32,8 57,49 7,49" fill="#fff"/></svg><span>SCAFU</span></div>
+   <div class="chat-title">Parallel Community Chat</div>
+   <div class="fox"><span class="f">Fox</span>&nbsp;<span class="amp">&amp;</span>&nbsp;<span class="p">panda</span></div>
+  </header>
+  <div id="specialNote" class="special-note">A special space for the two designated users</div>
+  <main class="messages" id="messages" aria-live="polite"></main>
+  <form class="composer" id="messageForm">
+   <button class="attach" type="button" id="attachButton" aria-label="Attach image">+</button>
+   <input type="file" id="imageInput" accept="image/*" hidden>
+   <input id="messageInput" placeholder="Write a message…" autocomplete="off" aria-label="Message">
+   <button class="send" type="submit">Send</button>
+  </form>
+ </div>
+</section>
+<script>
+/*
+  Front-end template. Connect these functions to your existing Flask/Firebase
+  API endpoints before deployment. No credentials are stored in this file.
+*/
+const SPECIAL_EMAIL = "light@scafu.app";
+const PRIVATE_SPECIAL_USERS = ["light@scafu.app", "SET_SECOND_SPECIAL_EMAIL_HERE"];
+let currentUser = null;
+let selectedImage = null;
+
+function showPage(id){
+ document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));
+}
+document.querySelectorAll("[data-show]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.show)));
+
+document.getElementById("attachButton").addEventListener("click",()=>document.getElementById("imageInput").click());
+document.getElementById("imageInput").addEventListener("change",e=>{selectedImage=e.target.files[0]||null;document.getElementById("attachButton").textContent=selectedImage?"✓":"+";});
+
+function addMessage({id, sender_username="User", sender_email="", body="", created_at="", mine=false, special=false}){
+ const node=document.createElement("article");
+ node.className="message"+(mine?" mine":"")+(special||sender_email.toLowerCase()===SPECIAL_EMAIL?" special":"");
+ const sender=document.createElement("div");sender.className="sender";sender.textContent=sender_username+(special||sender_email.toLowerCase()===SPECIAL_EMAIL?" ✦":"");
+ const content=document.createElement("div");content.textContent=body;
+ node.append(sender,content);
+ if(created_at){const time=document.createElement("div");time.className="time";time.textContent=created_at;node.append(time);}
+ if(mine && id!==undefined){const del=document.createElement("button");del.className="delete";del.textContent="Delete";del.type="button";del.addEventListener("click",()=>deleteMessage(id));node.prepend(del);}
+ document.getElementById("messages").append(node);
+ document.getElementById("messages").scrollTop=document.getElementById("messages").scrollHeight;
+}
+async function deleteMessage(id){
+ if(!confirm("Delete this message for everyone?"))return;
+ // Connect to the matching DELETE endpoint from app.py.
+ try{
+  const response=await fetch(`/api/community/messages/${encodeURIComponent(id)}`,{method:"DELETE",credentials:"same-origin"});
+  if(!response.ok)throw new Error("Delete failed");
+  await loadMessages();
+ }catch(err){alert("Could not delete the message. Connect this action to your Flask API.");}
+}
+async function loadMessages(){
+ // Expected API: GET /api/community/messages returns {messages:[...]}.
+ try{
+  const response=await fetch("/api/community/messages",{credentials:"same-origin"});
+  if(!response.ok)return;
+  const data=await response.json();
+  document.getElementById("messages").replaceChildren();
+  (data.messages||data||[]).forEach(m=>addMessage({
+   id:m.id, sender_username:m.sender_username||m.username||"User",
+   sender_email:m.sender_email||m.email||"", body:m.body||m.message||"",
+   created_at:m.created_at||"", mine:!!(currentUser&&m.sender_uid===currentUser.uid),
+   special:!!m.special
+  }));
+ }catch(e){/* Keep the page usable while API wiring is being completed. */}
+}
+document.getElementById("messageForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const input=document.getElementById("messageInput"), body=input.value.trim();
+ if(!body&&!selectedImage)return;
+ // Text message endpoint follows the existing Flask community API.
+ try{
+  const response=await fetch("/api/community/messages",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({body})});
+  if(!response.ok)throw new Error("Send failed");
+  input.value="";selectedImage=null;document.getElementById("imageInput").value="";document.getElementById("attachButton").textContent="+";
+  await loadMessages();
+ }catch(err){alert("Message sending needs to be connected to your current Flask API.");}
+});
+document.getElementById("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();document.getElementById("loginError").textContent="Connect this form to your existing Firebase authentication route in app.py.";
+});
+document.getElementById("signupForm").addEventListener("submit",async e=>{
+ e.preventDefault();document.getElementById("signupError").textContent="Connect this form to your existing Firebase signup route in app.py.";
+});
+document.getElementById("forgotButton").addEventListener("click",()=>alert("Connect password reset to Firebase Auth."));
+document.getElementById("signupForgot").addEventListener("click",()=>alert("Connect password reset to Firebase Auth."));
+// Set currentUser after successful Firebase authentication, then call loadMessages().
+</script>
+</body>
+</html>
