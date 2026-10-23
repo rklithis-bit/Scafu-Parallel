@@ -28,7 +28,7 @@ def init_firebase():
     values = {
         "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
         "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
-        "private_key": os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n"),
+        "private_key": os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\\n"),
     }
     if not all(values.values()):
         raise RuntimeError("Firebase Admin credentials are missing from environment variables.")
@@ -70,29 +70,49 @@ def api_login_required(fn):
         return fn(*args, **kwargs)
     return wrapped
 
+
 def firebase_rest(action, email, password):
     if not FIREBASE_WEB_API_KEY:
         raise RuntimeError("FIREBASE_WEB_API_KEY is not configured.")
-    endpoint = {
+
+    endpoints = {
         "signup": "accounts:signUp",
         "signin": "accounts:signInWithPassword",
-    }[action]
+    }
+
     response = requests.post(
-        f"https://identitytoolkit.googleapis.com/v1/{endpoint}?key={FIREBASE_WEB_API_KEY}",
-        json={"email": email, "password": password, "returnSecureToken": True},
+        f"https://identitytoolkit.googleapis.com/v1/"
+        f"{endpoints[action]}?key={FIREBASE_WEB_API_KEY}",
+        json={
+            "email": email,
+            "password": password,
+            "returnSecureToken": True,
+        },
         timeout=12,
     )
+
     data = response.json()
+
     if response.status_code != 200:
-        code = data.get("error", {}).get("message", "AUTH_FAILED")
-        messages = {
-            "EMAIL_EXISTS": "That email already has an account.",
-            "INVALID_LOGIN_CREDENTIALS": "Email or password is incorrect.",
-            "WEAK_PASSWORD : Password should be at least 6 characters": "Use a password with at least 6 characters.",
-            "INVALID_EMAIL": "Enter a valid email address.",
-        }
-        raise ValueError(messages.get(code, "Authentication failed. Check your details and try again."))
+        error = data.get("error", {}).get("message", "AUTH_FAILED")
+
+        if error == "EMAIL_EXISTS":
+            raise ValueError("EMAIL_EXISTS")
+
+        if error in ("INVALID_LOGIN_CREDENTIALS", "EMAIL_NOT_FOUND",
+                     "INVALID_PASSWORD"):
+            raise ValueError("Email or password is incorrect.")
+
+        if error == "WEAK_PASSWORD":
+            raise ValueError("Use a password with at least 6 characters.")
+
+        if error == "INVALID_EMAIL":
+            raise ValueError("Enter a valid email address.")
+
+        raise ValueError("Firebase authentication failed: " + error)
+
     return data
+
 
 @app.get("/")
 def index():
