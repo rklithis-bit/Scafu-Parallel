@@ -28,7 +28,7 @@ def init_firebase():
     values = {
         "project_id": os.environ.get("FIREBASE_PROJECT_ID"),
         "client_email": os.environ.get("FIREBASE_CLIENT_EMAIL"),
-        "private_key": os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\\n"),
+        "private_key": os.environ.get("FIREBASE_PRIVATE_KEY", "").replace("\\n", "\n"),
     }
     if not all(values.values()):
         raise RuntimeError("Firebase Admin credentials are missing from environment variables.")
