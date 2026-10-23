@@ -9,11 +9,8 @@
     ],
     "rewrites": [
       {
-        "run": {
-          "serviceId": "scafu",
-          "region": "asia-south1"
-        },
-        "source": "**"
+        "source": "**",
+        "destination": "/index.html"
       }
     ]
   }
