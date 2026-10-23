@@ -121,49 +121,104 @@ def index():
     return render_template("index.html", firebase_api_key=FIREBASE_WEB_API_KEY or "")
 
 @app.post("/api/auth/<action>")
+
+@app.post("/api/auth/<action>")
 def auth_action(action):
     if action not in {"signup", "signin"}:
         return jsonify(error="Unknown authentication action."), 404
+
     payload = request.get_json(silent=True) or {}
     email = str(payload.get("email", "")).strip().lower()
     password = str(payload.get("password", ""))
     username = str(payload.get("username", "")).strip()
+
     if not email or not password or (action == "signup" and not username):
         return jsonify(error="Complete all required fields."), 400
-    if action == "signup" and (len(username) < 3 or len(username) > 24 or not username.replace("_", "").isalnum()):
-        return jsonify(error="Username must be 3–24 letters, numbers or underscores."), 400
+
+    if action == "signup" and (
+        len(username) < 3
+        or len(username) > 24
+        or not username.replace("_", "").isalnum()
+    ):
+        return jsonify(
+            error="Username must be 3–24 letters, numbers or underscores."
+        ), 400
+
     try:
-        result = firebase_rest(action, email, password)
+        # If Firebase already has this email, authenticate the existing
+        # account instead of trying to create it again.
+        try:
+            result = firebase_rest(action, email, password)
+        except ValueError as exc:
+            if action != "signup" or str(exc) != "EMAIL_EXISTS":
+                raise
+            result = firebase_rest("signin", email, password)
+
         init_firebase()
-        decoded = firebase_auth.verify_id_token(result["idToken"], check_revoked=False)
+        decoded = firebase_auth.verify_id_token(
+            result["idToken"], check_revoked=False
+        )
         uid = decoded["uid"]
-        if action == "signup":
-            try:
-                with db() as conn:
-                    conn.execute("INSERT INTO users(uid, username, email, created_at) VALUES(?,?,?,?)",
-                                 (uid, username, email, int(time.time())))
-            except sqlite3.IntegrityError:
-                try: firebase_auth.delete_user(uid)
-                except Exception: pass
-                return jsonify(error="That username is already taken. Choose another."), 409
-        else:
-            with db() as conn:
-                row = conn.execute("SELECT username FROM users WHERE uid=?", (uid,)).fetchone()
-            if not row:
-                return jsonify(error="Account profile not found. Please register this account first."), 403
-            username = row["username"]
+
+        with db() as conn:
+            row = conn.execute(
+                "SELECT username FROM users WHERE uid = ?", (uid,)
+            ).fetchone()
+
+            if row:
+                username = row["username"]
+            else:
+                if action != "signup":
+                    return jsonify(
+                        error=(
+                            "Your Firebase account exists, but its app profile "
+                            "is missing. Choose Create Account and enter a "
+                            "username to restore it."
+                        )
+                    ), 403
+
+                try:
+                    conn.execute(
+                        """INSERT INTO users(uid, username, email, created_at)
+                           VALUES (?, ?, ?, ?)""",
+                        (uid, username, email, int(time.time())),
+                    )
+                except sqlite3.IntegrityError:
+                    return jsonify(
+                        error=(
+                            "That username or email is already used in the "
+                            "app database. Try a different username."
+                        )
+                    ), 409
+
         session.clear()
         session["uid"] = uid
         session["username"] = username
         session["email"] = email
+
         return jsonify(ok=True, redirect=url_for("chat_page"))
+
     except ValueError as exc:
+        if str(exc) == "EMAIL_EXISTS":
+            return jsonify(
+                error="This email already has an account. Sign in instead."
+            ), 400
         return jsonify(error=str(exc)), 400
+
     except requests.RequestException:
-        return jsonify(error="Could not reach Firebase. Try again shortly."), 503
+        return jsonify(
+            error="Could not reach Firebase. Try again shortly."
+        ), 503
+
     except Exception:
         app.logger.exception("Authentication failed")
-        return jsonify(error="Authentication setup error. Check Render environment variables and Firebase configuration."), 500
+        return jsonify(
+            error=(
+                "Authentication setup error. Check Render environment "
+                "variables and Firebase configuration."
+            )
+        ), 500
+
 
 @app.get("/chat")
 def chat_page():
