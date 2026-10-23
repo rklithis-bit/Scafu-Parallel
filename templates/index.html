@@ -2,409 +2,687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SCAFU — Parallel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fcf8ee">
+  <meta name="color-scheme" content="light">
+  <title>SCAFU — Parallel</title>
 
-<style>
-:root {
-  --cream: #fcf8ee;
-  --glass: rgba(246, 246, 247, 0.84);
-  --gold: #ad8752;
-  --ink: #292929;
-  --olive: #c3c5a4;
-}
+  <style>
+    :root {
+      color-scheme: light;
+      --cream: #fcf8ee;
+      --card: rgba(247, 247, 248, .88);
+      --white: rgba(255, 255, 255, .96);
+      --ink: #292929;
+      --muted: #81735f;
+      --gold: #ad8752;
+      --gold-light: #c3a47f;
+      --olive: #c3c5a4;
+      --border: rgba(130, 120, 100, .18);
+      --shadow:
+        0 12px 34px rgba(35, 30, 20, .12),
+        0 2px 8px rgba(35, 30, 20, .05);
+      --font: Georgia, "Times New Roman", serif;
+    }
 
-* { box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: var(--cream);
-  color: var(--ink);
-  font-family: Georgia, "Times New Roman", serif;
-}
+    html {
+      min-height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
 
-.page {
-  width: 100%;
-  max-width: 410px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    body {
+      min-width: 280px;
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 30px 20px;
+      overflow-x: hidden;
+      background:
+        radial-gradient(
+          ellipse at 15% 15%,
+          rgba(255, 255, 255, .8),
+          transparent 48%
+        ),
+        radial-gradient(
+          ellipse at 85% 85%,
+          rgba(232, 220, 196, .18),
+          transparent 50%
+        ),
+        var(--cream);
+      color: var(--ink);
+      font-family: var(--font);
+    }
 
-.brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 19px;
-  color: #050505;
-  font-size: 43px;
-}
+    button,
+    input {
+      font: inherit;
+    }
 
-.brand svg {
-  width: 55px;
-  height: 62px;
-  flex: none;
-}
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
 
-.card {
-  width: 100%;
-  padding: 15px 27px 17px;
-  border: 1px solid rgba(255,255,255,.85);
-  border-radius: 26px;
-  background: var(--glass);
-  box-shadow:
-    0 8px 30px rgba(0,0,0,.15),
-    inset 0 1px 1px rgba(255,255,255,.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
+    .page {
+      width: min(100%, 410px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: appear .55s ease both;
+    }
 
-.kicker {
-  margin: 0;
-  font-size: 20px;
-  letter-spacing: 4px;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      margin: 0 0 20px;
+      color: #050505;
+      font-size: 43px;
+      line-height: 1;
+      letter-spacing: -.8px;
+    }
 
-.parallel {
-  margin: 1px 0 0;
-  font-size: 43px;
-  letter-spacing: 9px;
-  font-weight: 600;
-}
+    .brand-logo {
+      display: block;
+      width: 55px;
+      height: 62px;
+      flex: 0 0 auto;
+    }
 
-.tagline {
-  margin: 1px 0 53px;
-  font-size: 16px;
-}
+    .card {
+      width: 100%;
+      padding: 25px 27px 22px;
+      border: 1px solid rgba(255, 255, 255, .9);
+      border-radius: 27px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
 
-.field {
-  display: block;
-  width: 100%;
-  height: 58px;
-  margin-bottom: 33px;
-  padding: 0 21px;
-  border: 1px solid rgba(255,255,255,.9);
-  border-radius: 19px;
-  outline: none;
-  background: rgba(255,255,255,.94);
-  box-shadow:
-    0 5px 17px rgba(0,0,0,.19),
-    inset 0 1px 2px #fff;
-  color: var(--ink);
-  font-family: Georgia, serif;
-  font-size: 16px;
-  letter-spacing: 3px;
-}
+    .eyebrow {
+      margin: 0;
+      color: #4d4a43;
+      font-size: 19px;
+      line-height: 1.45;
+      letter-spacing: 3px;
+    }
 
-.field::placeholder {
-  color: #c3a47f;
-  font-style: italic;
-  opacity: 1;
-}
+    .parallel {
+      margin: 0;
+      font-size: clamp(37px, 10vw, 44px);
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 7px;
+    }
 
-.field:focus {
-  border-color: #c8b18d;
-  box-shadow: 0 0 0 3px rgba(173,135,82,.12);
-}
+    .tagline {
+      margin: 3px 0 43px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
 
-/* Glass toggle */
-.toggle-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: -3px;
-}
+    .field-group {
+      display: grid;
+      gap: 23px;
+    }
 
-.toggle {
-  position: relative;
-  width: 106px;
-  height: 54px;
-  padding: 0;
-  border: 1px solid rgba(160,160,150,.62);
-  border-radius: 28px;
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.82),
-    rgba(238,238,234,.52)
-  );
-  box-shadow:
-    inset 0 1px 3px rgba(255,255,255,.95),
-    inset 0 -1px 3px rgba(0,0,0,.04);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background .3s ease, box-shadow .3s ease;
-}
+    .field {
+      display: block;
+      width: 100%;
+      height: 59px;
+      min-width: 0;
+      padding: 0 21px;
+      border: 1px solid rgba(255, 255, 255, .95);
+      border-radius: 19px;
+      outline: none;
+      background: var(--white);
+      color: var(--ink);
+      box-shadow:
+        0 6px 17px rgba(0, 0, 0, .12),
+        inset 0 1px 1px rgba(255, 255, 255, .95);
+      font-family: var(--font);
+      font-size: 16px;
+      letter-spacing: 2px;
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
 
-.knob {
-  position: absolute;
-  left: -1px;
-  top: -1px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  transition: transform .32s cubic-bezier(.2,.8,.2,1);
-}
+    .field::placeholder {
+      color: var(--gold-light);
+      font-style: italic;
+      opacity: 1;
+    }
 
-.knob svg {
-  display: block;
-  width: 54px;
-  height: 54px;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,.08));
-}
+    .field:focus {
+      border-color: rgba(173, 135, 82, .65);
+      box-shadow:
+        0 0 0 3px rgba(173, 135, 82, .12),
+        0 6px 17px rgba(0, 0, 0, .09);
+    }
 
-.toggle[aria-checked="true"] {
-  background: linear-gradient(
-    145deg,
-    rgba(214,216,193,.82),
-    rgba(245,245,239,.85)
-  );
-  box-shadow:
-    inset 0 1px 4px rgba(0,0,0,.08),
-    0 0 12px rgba(195,197,164,.25);
-}
+    .signup-only[hidden] {
+      display: none !important;
+    }
 
-.toggle[aria-checked="true"] .knob {
-  transform: translateX(52px);
-}
+    /* Glass sign-in switch */
+    .switch-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2px 0 0;
+      margin-top: 24px;
+    }
 
-.toggle:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 5px;
-}
+    .switch {
+      position: relative;
+      display: block;
+      width: 106px;
+      height: 54px;
+      flex: 0 0 auto;
+      padding: 0;
+      border: 1px solid rgba(155, 153, 140, .65);
+      border-radius: 28px;
+      background: linear-gradient(
+        145deg,
+        rgba(255, 255, 255, .95),
+        rgba(229, 229, 222, .8)
+      );
+      box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, .08),
+        0 3px 9px rgba(0, 0, 0, .06);
+      cursor: pointer;
+      touch-action: manipulation;
+      transition:
+        background .25s ease,
+        box-shadow .25s ease;
+    }
 
-.toggle:disabled {
-  cursor: wait;
-  opacity: .75;
-}
+    .switch-knob {
+      position: absolute;
+      top: -1px;
+      left: -1px;
+      display: block;
+      width: 54px;
+      height: 54px;
+      border: 1px solid rgba(194, 194, 183, .85);
+      border-radius: 50%;
+      background: linear-gradient(145deg, #fff, #f1f1eb);
+      box-shadow:
+        0 2px 7px rgba(0, 0, 0, .12),
+        inset 0 1px 1px #fff;
+      transition:
+        transform .32s cubic-bezier(.2, .8, .2, 1);
+    }
 
-.status {
-  min-height: 18px;
-  margin-top: 12px;
-  text-align: center;
-  font: 13px Arial, sans-serif;
-  color: #a33;
-}
+    .switch-knob svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
 
-.links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 1px;
-  color: var(--gold);
-  font-size: 16px;
-}
+    .switch[aria-checked="true"] {
+      background: linear-gradient(
+        145deg,
+        rgba(213, 216, 192, .95),
+        rgba(241, 242, 231, .96)
+      );
+      box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, .08),
+        0 0 12px rgba(195, 197, 164, .25);
+    }
 
-.links button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
+    .switch[aria-checked="true"] .switch-knob {
+      transform: translateX(52px);
+    }
 
-.links button:hover {
-  text-decoration: underline;
-}
+    .switch:focus-visible,
+    .text-button:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: 4px;
+    }
 
-.slogan {
-  margin-top: 15px;
-  color: #806a4b;
-  font-size: 16px;
-  font-style: italic;
-  letter-spacing: 5px;
-  text-align: center;
-  white-space: nowrap;
-}
+    .switch:disabled {
+      cursor: wait;
+      opacity: .75;
+    }
 
-@media (max-width: 420px) {
-  body { padding: 18px; }
-  .brand { font-size: 36px; }
-  .brand svg { width: 48px; height: 54px; }
-  .card { padding: 20px 20px 17px; }
-  .kicker { font-size: 17px; letter-spacing: 3px; }
-  .parallel { font-size: 37px; letter-spacing: 7px; }
-  .tagline { font-size: 14px; margin-bottom: 42px; }
-  .field { margin-bottom: 26px; }
-  .slogan { font-size: 12px; letter-spacing: 3px; }
-}
+    .status {
+      min-height: 18px;
+      margin: 12px 0 0;
+      color: #a33;
+      font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; }
-}
-</style>
+    .status:empty {
+      margin-top: 0;
+      min-height: 0;
+    }
+
+    .links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 11px;
+      margin-top: 11px;
+      color: var(--gold);
+      font-size: 16px;
+    }
+
+    .text-button {
+      padding: 3px 0;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .text-button:hover {
+      color: #79582e;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .slogan {
+      margin-top: 17px;
+      color: #806a4b;
+      font-size: 15px;
+      font-style: italic;
+      letter-spacing: 4.5px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 22px 17px;
+      }
+
+      .brand {
+        gap: 10px;
+        margin-bottom: 18px;
+        font-size: 37px;
+      }
+
+      .brand-logo {
+        width: 48px;
+        height: 54px;
+      }
+
+      .card {
+        padding: 23px 20px 21px;
+        border-radius: 24px;
+      }
+
+      .eyebrow {
+        font-size: 16px;
+        letter-spacing: 2.7px;
+      }
+
+      .parallel {
+        font-size: 37px;
+        letter-spacing: 6px;
+      }
+
+      .tagline {
+        margin-bottom: 34px;
+        font-size: 14px;
+      }
+
+      .field {
+        height: 56px;
+        padding-inline: 17px;
+        font-size: 15px;
+      }
+
+      .field-group {
+        gap: 19px;
+      }
+
+      .switch-area {
+        margin-top: 22px;
+      }
+
+      .links {
+        gap: 9px;
+        font-size: 15px;
+      }
+
+      .slogan {
+        font-size: 12px;
+        letter-spacing: 3px;
+      }
+    }
+
+    @media (max-height: 680px) {
+      body {
+        align-items: start;
+      }
+
+      .page {
+        margin-block: auto;
+      }
+
+      .tagline {
+        margin-bottom: 25px;
+      }
+
+      .card {
+        padding-block: 19px;
+      }
+
+      .field-group {
+        gap: 15px;
+      }
+
+      .switch-area {
+        margin-top: 17px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
 </head>
 
 <body>
-<main class="page">
-
-  <div class="brand" aria-label="SCAFU">
-    <svg viewBox="0 0 64 70" role="img" aria-label="Parallel logo">
-      <polygon points="32,2 61,19 61,51 32,68 3,51 3,19"
-               fill="#050505"/>
-      <circle cx="32" cy="35" r="27" fill="#ff1018"/>
-      <polygon points="32,8 57,49 7,49" fill="#fff"/>
-    </svg>
-    <span>SCAFU</span>
-  </div>
-
-  <form class="card" id="loginForm">
-    <p class="kicker">Lead the Innovation.</p>
-    <h1 class="parallel">Parallel</h1>
-    <p class="tagline">The parallel way of communication.</p>
-
-    <input
-      class="field"
-      id="loginId"
-      name="email"
-      type="email"
-      autocomplete="username"
-      placeholder="Scafu ID"
-      aria-label="Scafu ID or email"
-      required
-    >
-
-    <input
-      class="field"
-      id="loginPassword"
-      name="password"
-      type="password"
-      autocomplete="current-password"
-      placeholder="Password"
-      aria-label="Password"
-      required
-    >
-
-    <div class="toggle-wrap">
-      <button
-        class="toggle"
-        id="loginToggle"
-        type="button"
-        role="switch"
-        aria-checked="false"
-        aria-label="Switch on to sign in"
+  <main class="page">
+    <header class="brand" aria-label="SCAFU">
+      <svg
+        class="brand-logo"
+        viewBox="0 0 64 70"
+        role="img"
+        aria-label="Parallel geometric logo"
       >
-        <span class="knob">
-          <svg viewBox="0 0 54 54" aria-hidden="true">
-            <circle cx="27" cy="27" r="26.5"
-                    fill="#f7f7f2" stroke="#c9c9c2"/>
-            <g stroke="#c3c5a4" stroke-width="4"
-               stroke-linecap="round">
-              <path d="M16 36 L27 14"/>
-              <path d="M25 36 L36 14"/>
-            </g>
-          </svg>
-        </span>
-      </button>
-    </div>
+        <polygon
+          points="32,2 61,19 61,51 32,68 3,51 3,19"
+          fill="#050505"
+        />
+        <circle cx="32" cy="35" r="27" fill="#ff1018"/>
+        <polygon points="32,8 57,49 7,49" fill="#fff"/>
+      </svg>
+      <span>SCAFU</span>
+    </header>
 
-    <div class="status" id="loginStatus" role="status"
-         aria-live="polite"></div>
+    <form class="card" id="authForm">
+      <p class="eyebrow">Lead the Innovation.</p>
+      <h1 class="parallel">Parallel</h1>
+      <p class="tagline">The parallel way of communication.</p>
 
-    <div class="links">
-      <button type="button" id="forgotButton">forgot password</button>
-      <span>•</span>
-      <button type="button" id="signupButton">Signup</button>
-    </div>
-  </form>
+      <div class="field-group">
+        <input
+          class="field signup-only"
+          id="username"
+          name="username"
+          type="text"
+          autocomplete="username"
+          placeholder="Username"
+          aria-label="Username"
+          maxlength="40"
+          hidden
+        >
 
-  <div class="slogan">We do things that matter //</div>
-</main>
+        <input
+          class="field"
+          id="email"
+          name="email"
+          type="email"
+          autocomplete="email"
+          placeholder="Scafu ID"
+          aria-label="Email address"
+          required
+        >
 
-<script>
-const form = document.getElementById("loginForm");
-const toggle = document.getElementById("loginToggle");
-const status = document.getElementById("loginStatus");
-let busy = false;
+        <input
+          class="field"
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          placeholder="Password"
+          aria-label="Password"
+          required
+        >
+      </div>
 
-function setToggle(on) {
-  toggle.setAttribute("aria-checked", String(on));
-  toggle.setAttribute(
-    "aria-label",
-    on ? "Switch off" : "Switch on to sign in"
-  );
-}
+      <div class="switch-area">
+        <button
+          class="switch"
+          id="authSwitch"
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label="Switch on to sign in"
+        >
+          <span class="switch-knob">
+            <svg viewBox="0 0 54 54" aria-hidden="true">
+              <circle
+                cx="27"
+                cy="27"
+                r="26.5"
+                fill="#f7f7f2"
+                stroke="#c9c9c2"
+              />
+              <g
+                fill="none"
+                stroke="#c3c5a4"
+                stroke-width="4"
+                stroke-linecap="round"
+              >
+                <path d="M16 36 L27 14"/>
+                <path d="M25 36 L36 14"/>
+              </g>
+            </svg>
+          </span>
+        </button>
+      </div>
 
-async function signIn() {
-  if (busy) return;
+      <p class="status" id="authStatus" role="status" aria-live="polite"></p>
 
-  if (!form.reportValidity()) {
-    setToggle(false);
-    return;
-  }
+      <nav class="links" aria-label="Account actions">
+        <button class="text-button" id="forgotButton" type="button">
+          Forgot password
+        </button>
+        <span aria-hidden="true">•</span>
+        <button class="text-button" id="modeButton" type="button">
+          Signup
+        </button>
+      </nav>
+    </form>
 
-  busy = true;
-  toggle.disabled = true;
-  status.style.color = "#806a4b";
-  status.textContent = "Signing in…";
+    <footer class="slogan">We do things that matter //</footer>
+  </main>
 
-  try {
-    const response = await fetch("/api/auth/signin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify({
-        email: document.getElementById("loginId").value.trim(),
-        password: document.getElementById("loginPassword").value
-      })
-    });
+  <script>
+    (() => {
+      "use strict";
 
-    const data = await response.json().catch(() => ({}));
+      const form = document.getElementById("authForm");
+      const toggle = document.getElementById("authSwitch");
+      const status = document.getElementById("authStatus");
+      const username = document.getElementById("username");
+      const email = document.getElementById("email");
+      const password = document.getElementById("password");
+      const modeButton = document.getElementById("modeButton");
+      const forgotButton = document.getElementById("forgotButton");
 
-    if (!response.ok) {
-      throw new Error(data.error || data.message ||
-                      "Sign-in failed. Check your credentials.");
-    }
+      let mode = new URLSearchParams(location.search).get("mode") === "signup"
+        ? "signup"
+        : "signin";
 
-    if (data.redirect) {
-      window.location.assign(data.redirect);
-    } else {
-      window.location.assign("/chat");
-    }
-  } catch (error) {
-    status.style.color = "#a33";
-    status.textContent = error.message || "Unable to sign in.";
-    setToggle(false);
-  } finally {
-    busy = false;
-    toggle.disabled = false;
-  }
-}
+      let busy = false;
 
-toggle.addEventListener("click", () => {
-  const isOn = toggle.getAttribute("aria-checked") === "true";
+      function showStatus(message, isError = false) {
+        status.textContent = message;
+        status.style.color = isError ? "#a33" : "#806a4b";
+      }
 
-  if (isOn) {
-    setToggle(false);
-    status.textContent = "";
-  } else {
-    setToggle(true);
-    signIn();
-  }
-});
+      function setSwitch(on) {
+        toggle.setAttribute("aria-checked", String(on));
+        toggle.setAttribute(
+          "aria-label",
+          on ? "Switch off" : `Switch on to ${mode === "signup" ? "create account" : "sign in"}`
+        );
+      }
 
-form.addEventListener("submit", event => {
-  event.preventDefault();
-  setToggle(true);
-  signIn();
-});
+      function setMode(nextMode, updateUrl = true) {
+        mode = nextMode;
+        const signingUp = mode === "signup";
 
-document.getElementById("signupButton").addEventListener("click", () => {
-  window.location.assign("/?mode=signup");
-});
+        username.hidden = !signingUp;
+        username.required = signingUp;
+        username.autocomplete = signingUp ? "nickname" : "username";
+        password.autocomplete = signingUp ? "new-password" : "current-password";
+        password.value = "";
+        modeButton.textContent = signingUp ? "Signin" : "Signup";
 
-document.getElementById("forgotButton").addEventListener("click", () => {
-  status.style.color = "#806a4b";
-  status.textContent =
-    "Connect this action to your Firebase password-reset flow.";
-});
-</script>
+        setSwitch(false);
+        showStatus("");
+
+        if (updateUrl) {
+          const url = new URL(location.href);
+          if (signingUp) {
+            url.searchParams.set("mode", "signup");
+          } else {
+            url.searchParams.delete("mode");
+          }
+          history.replaceState({}, "", url);
+        }
+      }
+
+      async function submitAuth() {
+        if (busy) return;
+
+        if (!form.reportValidity()) {
+          setSwitch(false);
+          return;
+        }
+
+        busy = true;
+        toggle.disabled = true;
+        modeButton.disabled = true;
+        forgotButton.disabled = true;
+
+        showStatus(mode === "signup" ? "Creating your account…" : "Signing in…");
+
+        try {
+          const response = await fetch(
+            `/api/auth/?mode=${encodeURIComponent(mode)}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              credentials: "same-origin",
+              body: JSON.stringify({
+                email: email.value.trim(),
+                password: password.value,
+                username: username.value.trim()
+              })
+            }
+          );
+
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(
+              data.error ||
+              data.message ||
+              `Request failed (${response.status}). Please try again.`
+            );
+          }
+
+          if (data.redirect) {
+            location.assign(data.redirect);
+            return;
+          }
+
+          if (data.success === false) {
+            throw new Error(data.error || data.message || "Authentication failed.");
+          }
+
+          location.assign("/chat");
+        } catch (error) {
+          setSwitch(false);
+          showStatus(
+            error instanceof TypeError
+              ? "Could not reach the server. Check your connection and try again."
+              : error.message || "Authentication failed. Please try again.",
+            true
+          );
+        } finally {
+          busy = false;
+          toggle.disabled = false;
+          modeButton.disabled = false;
+          forgotButton.disabled = false;
+        }
+      }
+
+      toggle.addEventListener("click", () => {
+        if (busy) return;
+
+        const currentlyOn = toggle.getAttribute("aria-checked") === "true";
+
+        if (currentlyOn) {
+          setSwitch(false);
+          showStatus("");
+          return;
+        }
+
+        setSwitch(true);
+        submitAuth();
+      });
+
+      form.addEventListener("submit", event => {
+        event.preventDefault();
+        setSwitch(true);
+        submitAuth();
+      });
+
+      modeButton.addEventListener("click", () => {
+        setMode(mode === "signin" ? "signup" : "signin");
+      });
+
+      forgotButton.addEventListener("click", () => {
+        showStatus(
+          "Password reset must be connected to your Firebase password-reset flow."
+        );
+      });
+
+      setMode(mode, false);
+    })();
+  </script>
 </body>
 </html>
