@@ -1,64 +1,557 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SCAFU — Parallel</title>
-<style>
-:root{--cream:#fcf8ee;--gold:#a9814b;--ink:#202020;--panel:#f6f3ec}
-*{box-sizing:border-box}
-html{min-height:100%;background:#191919}
-body{margin:0;min-height:100vh;padding:clamp(12px,3vw,32px);display:grid;place-items:center;font-family:Georgia,"Times New Roman",serif;color:var(--ink)}
-.shell{width:min(100%,1120px);min-height:min(820px,calc(100vh - 24px));background:var(--cream);border-radius:clamp(18px,3vw,36px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(24px,5vh,48px) 18px}
-.brand{display:flex;align-items:center;gap:12px;font-size:clamp(30px,4vw,42px);margin-bottom:22px;color:#080808}
-.logo{width:48px;height:53px;flex-shrink:0}
-.card{width:min(100%,430px);background:var(--panel);border:1px solid #e8e0d2;border-radius:24px;padding:clamp(20px,4vw,32px);box-shadow:0 14px 36px #0000000d}
-.kicker{font-size:clamp(15px,2vw,18px);letter-spacing:2px;margin:0 0 5px;color:#64533d}
-.parallel{font-size:clamp(34px,5vw,46px);letter-spacing:clamp(3px,1vw,7px);line-height:1.1;margin:0}
-.tag{font-size:15px;line-height:1.5;margin:10px 0 24px;color:#655d52}
-.field{display:block;width:100%;height:52px;border:1px solid #e7dfd2;border-radius:13px;background:#fff;padding:0 15px;margin:0 0 14px;font:16px Arial,sans-serif;outline:none}
-.field:focus{border-color:var(--gold);box-shadow:0 0 0 3px #b18b5520}
-.field::placeholder{color:#a99a83;letter-spacing:1px}
-.submit{display:block;width:100%;min-height:50px;border:0;border-radius:13px;background:#171717;color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:5px}
-.submit:hover{background:#34302a}
-.submit:disabled{opacity:.65;cursor:wait}
-.links{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;margin-top:16px;color:var(--gold);font:14px Arial,sans-serif}
-.links button{border:0;background:none;color:#8b6737;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px}
-.slogan{margin-top:20px;color:#7b6445;letter-spacing:clamp(2px,.5vw,4px);font-size:clamp(10px,1.5vw,13px);font-style:italic;text-align:center}
-.error{font:14px/1.45 Arial,sans-serif;color:#a33;min-height:0;margin-top:10px;overflow-wrap:anywhere}
-.error:empty{display:none}
-.hidden{display:none!important}
-@media(max-width:480px){body{padding:8px}.shell{min-height:calc(100vh - 16px);padding:24px 14px;border-radius:20px;justify-content:center}.brand{margin-bottom:18px}.logo{width:40px;height:44px}.card{border-radius:20px}.slogan{max-width:280px;line-height:1.6}}
-@media(max-height:650px){.shell{min-height:calc(100vh - 24px);padding-top:18px;padding-bottom:18px}.brand{margin-bottom:12px}.tag{margin-bottom:16px}.field{height:46px;margin-bottom:10px}.slogan{margin-top:12px}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f4f0">
+  <title>SCAFU — Parallel</title>
+
+  <style>
+    :root {
+      --background: #f5f4f0;
+      --surface: rgba(255, 255, 255, 0.76);
+      --text: #191919;
+      --muted: #77756f;
+      --accent: #a27b49;
+      --border: rgba(30, 30, 30, 0.08);
+      --radius: 26px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--background);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+        "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 15% 15%,
+          rgba(229, 213, 186, 0.38), transparent 42%),
+        radial-gradient(ellipse at 90% 85%,
+          rgba(205, 214, 208, 0.34), transparent 40%),
+        var(--background);
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1100px;
+      min-height: min(780px, calc(100dvh - 56px));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: clamp(32px, 6vw, 80px);
+      padding: clamp(28px, 6vw, 76px);
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 34px;
+      background: rgba(255,255,255,.24);
+      box-shadow: 0 30px 100px rgba(45, 40, 30, .06);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+
+    /* Brand side */
+
+    .intro {
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 64px;
+    }
+
+    .logo {
+      width: 47px;
+      height: 51px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 5px 8px rgba(0,0,0,.08));
+    }
+
+    .brand-name {
+      font-size: 27px;
+      font-weight: 650;
+      letter-spacing: -1.2px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .headline {
+      margin: 0;
+      font-size: clamp(42px, 5vw, 65px);
+      line-height: 1.04;
+      font-weight: 650;
+      letter-spacing: -3.5px;
+    }
+
+    .headline span {
+      color: #a58a67;
+    }
+
+    .description {
+      max-width: 350px;
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.9;
+    }
+
+    .decorative-line {
+      width: 54px;
+      height: 3px;
+      border-radius: 10px;
+      background: #b79a70;
+      margin-top: 34px;
+    }
+
+    .footer-note {
+      margin-top: 64px;
+      font-size: 11px;
+      color: #99958d;
+      letter-spacing: 1.5px;
+    }
+
+    /* Login card */
+
+    .auth-area {
+      width: 100%;
+      max-width: 390px;
+      justify-self: end;
+    }
+
+    .auth-card {
+      padding: clamp(25px, 4vw, 38px);
+      border: 1px solid rgba(255,255,255,.95);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow:
+        0 22px 70px rgba(30, 25, 15, .075),
+        inset 0 1px 0 rgba(255,255,255,.95);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 27px;
+      font-weight: 650;
+      letter-spacing: -1px;
+    }
+
+    .card-subtitle {
+      margin: 9px 0 28px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .field-label {
+      display: block;
+      margin: 0 0 8px 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #55534f;
+    }
+
+    .field {
+      display: block;
+      width: 100%;
+      height: 51px;
+      margin: 0 0 19px;
+      padding: 0 15px;
+      color: var(--text);
+      font-size: 14px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      outline: none;
+      background: rgba(255,255,255,.88);
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .field::placeholder {
+      color: #aaa69e;
+    }
+
+    .field:focus {
+      border-color: rgba(162,123,73,.65);
+      box-shadow: 0 0 0 4px rgba(162,123,73,.10);
+    }
+
+    .primary-button {
+      width: 100%;
+      min-height: 51px;
+      margin-top: 4px;
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 13px;
+      background: #1b1b1b;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .2s, opacity .2s;
+    }
+
+    .primary-button:hover {
+      background: #35332f;
+      transform: translateY(-1px);
+    }
+
+    .primary-button:active {
+      transform: scale(.99);
+    }
+
+    .primary-button:disabled {
+      opacity: .65;
+      cursor: wait;
+      transform: none;
+    }
+
+    .links {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+      color: #aaa49a;
+      font-size: 12px;
+    }
+
+    .text-button {
+      border: 0;
+      padding: 4px;
+      background: transparent;
+      color: #80623c;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .text-button:hover {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .error {
+      margin-top: 14px;
+      color: #b42318;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .error:empty {
+      display: none;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .privacy-note {
+      margin: 20px 0 0;
+      color: #99958d;
+      text-align: center;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    /* Responsive */
+
+    @media (max-width: 760px) {
+      body {
+        padding: 12px;
+        place-items: center;
+      }
+
+      .page {
+        min-height: calc(100dvh - 24px);
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 28px 18px;
+        border-radius: 25px;
+        align-content: center;
+      }
+
+      .intro {
+        text-align: center;
+      }
+
+      .brand {
+        justify-content: center;
+        margin-bottom: 25px;
+      }
+
+      .logo {
+        width: 39px;
+        height: 43px;
+      }
+
+      .brand-name {
+        font-size: 24px;
+      }
+
+      .eyebrow {
+        margin-bottom: 11px;
+        font-size: 10px;
+      }
+
+      .headline {
+        font-size: clamp(39px, 10vw, 53px);
+        letter-spacing: -2.5px;
+      }
+
+      .description {
+        margin: 13px auto 0;
+        max-width: 310px;
+        font-size: 13px;
+      }
+
+      .decorative-line,
+      .footer-note {
+        display: none;
+      }
+
+      .auth-area {
+        max-width: 420px;
+        justify-self: center;
+      }
+
+      .auth-card {
+        padding: 26px 22px;
+      }
+
+      .card-title {
+        font-size: 25px;
+      }
+
+      .card-subtitle {
+        margin-bottom: 23px;
+      }
+
+      .privacy-note {
+        margin-top: 14px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .page {
+        padding: 23px 12px;
+      }
+
+      .auth-card {
+        padding: 23px 17px;
+      }
+
+      .headline {
+        font-size: 36px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<main class="shell">
-<div class="brand"><svg class="logo" viewBox="0 0 64 70" aria-label="SCAFU logo"><polygon points="32,2 61,19 61,51 32,68 3,51 3,19" fill="#050505"/><circle cx="32" cy="35" r="27" fill="#ff1018"/><polygon points="32,8 57,49 7,49" fill="#fff"/></svg><span>SCAFU</span></div>
-<form class="card" id="authForm">
-<p class="kicker">Lead the Innovation.</p><h1 class="parallel">Parallel</h1><p class="tag">The parallel way of communication.</p>
-<div id="usernameWrap" class="hidden"><input class="field" id="username" placeholder="Username" autocomplete="nickname"></div>
-<input class="field" id="email" type="email" placeholder="Scafu ID" autocomplete="username" aria-label="Scafu ID" required>
-<input class="field" id="password" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password" required>
-<button class="submit" id="submitButton" type="submit">Sign In</button>
-<div class="links"><button type="button" id="forgot">Forgot password?</button><span aria-hidden="true">•</span><button type="button" id="toggle">Create account</button></div>
-<div class="error" id="error" role="status" aria-live="polite"></div>
-</form>
-<div class="slogan">We do things that matter //</div>
-</main>
-<script>
-const form=document.getElementById("authForm");
-const toggle=document.getElementById("toggle");
-const usernameWrap=document.getElementById("usernameWrap");
-const username=document.getElementById("username");
-const email=document.getElementById("email");
-const password=document.getElementById("password");
-const submitButton=document.getElementById("submitButton");
-const error=document.getElementById("error");
-let mode="signin";
-toggle.onclick=()=>{mode=mode==="signin"?"signup":"signin";usernameWrap.classList.toggle("hidden",mode!=="signup");username.required=mode==="signup";password.autocomplete=mode==="signup"?"new-password":"current-password";submitButton.textContent=mode==="signin"?"Sign In":"Create Account";toggle.textContent=mode==="signin"?"Create account":"Sign in instead";error.textContent="";};
-form.onsubmit=async e=>{e.preventDefault();error.textContent="";submitButton.disabled=true;submitButton.textContent=mode==="signin"?"Signing in…":"Creating account…";try{const r=await fetch("/api/auth/"+mode,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email.value.trim(),password:password.value,username:username.value.trim()})});const d=await r.json();if(!r.ok)throw Error(d.error||"Authentication failed.");location.href=d.redirect||"/chat";}catch(err){error.textContent=err.message||"Something went wrong. Please try again.";}finally{submitButton.disabled=false;submitButton.textContent=mode==="signin"?"Sign In":"Create Account";}};
-document.getElementById("forgot").onclick=()=>{error.textContent="Password reset is not configured on this page yet. Use Firebase Authentication password reset or add a reset flow.";};
-</script>
+  <main class="page">
+
+    <section class="intro" aria-label="SCAFU introduction">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 64 70"
+             role="img" aria-label="SCAFU logo">
+          <polygon points="32,2 61,19 61,51 32,68 3,51 3,19"
+                   fill="#171717"/>
+          <circle cx="32" cy="35" r="27" fill="#ff3038"/>
+          <polygon points="32,8 57,49 7,49" fill="#ffffff"/>
+        </svg>
+        <span class="brand-name">SCAFU</span>
+      </div>
+
+      <div class="eyebrow">Parallel Technologies</div>
+      <h1 class="headline">
+        A private space.<br>
+        <span>Your people.</span>
+      </h1>
+
+      <p class="description">
+        Conversations that matter, designed around the people who matter
+        to you. Welcome to your parallel world.
+      </p>
+
+      <div class="decorative-line"></div>
+      <div class="footer-note">WE DO THINGS THAT MATTER&nbsp; //</div>
+    </section>
+
+    <section class="auth-area" aria-label="Account access">
+      <form class="auth-card" id="authForm">
+        <h2 class="card-title" id="formTitle">Welcome back.</h2>
+        <p class="card-subtitle" id="formSubtitle">
+          Sign in to continue to your SCAFU space.
+        </p>
+
+        <div id="usernameWrap" class="hidden">
+          <label class="field-label" for="username">Username</label>
+          <input class="field" id="username" name="username"
+                 placeholder="Choose a username"
+                 autocomplete="nickname">
+        </div>
+
+        <label class="field-label" for="email">Scafu ID</label>
+        <input class="field" id="email" name="email" type="email"
+               placeholder="you@example.com"
+               autocomplete="username" required>
+
+        <label class="field-label" for="password">Password</label>
+        <input class="field" id="password" name="password"
+               type="password" placeholder="Enter your password"
+               autocomplete="current-password" required>
+
+        <button class="primary-button" id="submitButton" type="submit">
+          Sign In
+        </button>
+
+        <div class="links">
+          <button class="text-button" type="button" id="forgot">
+            Forgot password?
+          </button>
+          <span aria-hidden="true">·</span>
+          <button class="text-button" type="button" id="toggle">
+            Create account
+          </button>
+        </div>
+
+        <div class="error" id="error" role="status"
+             aria-live="polite"></div>
+      </form>
+
+      <p class="privacy-note">
+        Made for meaningful conversations.<br>
+        SCAFU by Parallel.
+      </p>
+    </section>
+
+  </main>
+
+  <script>
+    const form = document.getElementById("authForm");
+    const toggle = document.getElementById("toggle");
+    const usernameWrap = document.getElementById("usernameWrap");
+    const username = document.getElementById("username");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const submitButton = document.getElementById("submitButton");
+    const error = document.getElementById("error");
+    const formTitle = document.getElementById("formTitle");
+    const formSubtitle = document.getElementById("formSubtitle");
+
+    let mode = "signin";
+
+    toggle.addEventListener("click", () => {
+      mode = mode === "signin" ? "signup" : "signin";
+
+      usernameWrap.classList.toggle("hidden", mode !== "signup");
+      username.required = mode === "signup";
+
+      password.autocomplete =
+        mode === "signup" ? "new-password" : "current-password";
+
+      submitButton.textContent =
+        mode === "signin" ? "Sign In" : "Create Account";
+
+      formTitle.textContent =
+        mode === "signin" ? "Welcome back." : "Join SCAFU.";
+
+      formSubtitle.textContent =
+        mode === "signin"
+          ? "Sign in to continue to your SCAFU space."
+          : "Create your account and join your parallel world.";
+
+      toggle.textContent =
+        mode === "signin" ? "Create account" : "Sign in instead";
+
+      error.textContent = "";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      error.textContent = "";
+
+      submitButton.disabled = true;
+      submitButton.textContent =
+        mode === "signin" ? "Signing in…" : "Creating account…";
+
+      try {
+        const response = await fetch("/api/auth/" + mode, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: email.value.trim(),
+            password: password.value,
+            username: username.value.trim()
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Authentication failed.");
+        }
+
+        window.location.href = data.redirect || "/chat";
+      } catch (err) {
+        error.textContent =
+          err.message || "Something went wrong. Please try again.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent =
+          mode === "signin" ? "Sign In" : "Create Account";
+      }
+    });
+
+    document.getElementById("forgot").addEventListener("click", () => {
+      error.textContent =
+        "Password reset is not configured on this page yet. " +
+        "Use Firebase Authentication password reset or add a reset flow.";
+    });
+  </script>
 </body>
 </html>
