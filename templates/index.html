@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -661,24 +660,79 @@
           return;
         }
 
+        // Turn the visual switch on first; let the browser paint the animation.
         setSwitch(true);
-        submitAuth();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            submitAuth();
+          });
+        });
       });
 
       form.addEventListener("submit", event => {
         event.preventDefault();
         setSwitch(true);
-        submitAuth();
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            submitAuth();
+          });
+        });
       });
 
       modeButton.addEventListener("click", () => {
         setMode(mode === "signin" ? "signup" : "signin");
       });
 
-      forgotButton.addEventListener("click", () => {
-        showStatus(
-          "Password reset must be connected to your Firebase password-reset flow."
-        );
+      forgotButton.addEventListener("click", async () => {
+        const address = email.value.trim();
+
+        if (!address) {
+          email.focus();
+          showStatus("Enter your Scafu ID/email first, then choose Forgot password.", true);
+          return;
+        }
+
+        if (busy) return;
+
+        forgotButton.disabled = true;
+        modeButton.disabled = true;
+        showStatus("Requesting password reset…");
+
+        try {
+          const response = await fetch("/api/auth/reset-password", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ email: address })
+          });
+
+          const data = await response.json().catch(() => ({}));
+
+          if (!response.ok) {
+            throw new Error(
+              data.error || data.message ||
+              `Password reset failed (${response.status}).`
+            );
+          }
+
+          showStatus(
+            data.message ||
+            "If that account exists, Firebase will send a password-reset email."
+          );
+        } catch (error) {
+          showStatus(
+            error instanceof TypeError
+              ? "Could not reach the server. Check your connection and try again."
+              : (error.message || "Could not request a password reset."),
+            true
+          );
+        } finally {
+          forgotButton.disabled = false;
+          modeButton.disabled = false;
+        }
       });
 
       setMode(mode, false);
